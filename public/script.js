@@ -16,11 +16,12 @@ let myStream
     video:true
  }).then((stream)=>{
     myStream=stream
+    addVideoStream(myVideo,stream)
  })
 
  function addVideoStream(video, stream){
     video.srcObject=stream
-    video.addEventListner("loaddedmetadata",()=>{
+    video.addEventListner("loadedmetadata",()=>{
         video.play()
         $("#video_grid").append(video)
     })

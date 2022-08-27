@@ -22,19 +22,26 @@ navigator.mediaDevices
         myStream = stream;
         addVideoStream(myVideo, stream);
 
-        socket.on("user-connected",(userId)=>{
-            connectToNewUser(userId,stream)
-        })
+        socket.on("user-connected", (userId) => {
+            connectToNewUser(userId, stream);
+        });
+
+        peer.on("call", (call) => {
+            call.answer(stream);
+            const video = document.createElement("video");
+            call.on("stream", (userVideoStream) => {
+                addVideoStream(video, userVideoStream);
+            });
+        });
     })
 
-    peer.on("call",(call)=>{
-        call.answer(myStream)
-        const video=document.createElement("video")
-        call.on("stream",(userVideoStream)=>{
-            addVideoStream(video,userVideoStream)
-        })
-
-    })
+function connectToNewUser(userId, stream) {
+    const call = peer.call(userId, stream);
+    const video = document.createElement("video");
+    call.on("stream", (userVideoStream) => {
+        addVideoStream(video, userVideoStream);
+    });
+};
 
 function addVideoStream(video, stream) {
     video.srcObject = stream;
@@ -43,14 +50,6 @@ function addVideoStream(video, stream) {
         $("#video_grid").append(video)
     });
 };
-
-function connectToNewUser(userId,stream){
-    const call= peer.call(userId,stream)
-    const video = document.createElement("video")
-    call.on("stream",(userVideoStream)=>{
-        addVideoStream(video,userVideoStream)
-    })
-}
 
 $(function () {
     $("#show_chat").click(function () {
@@ -77,6 +76,7 @@ $(function () {
             $("#chat_message").val("");
         }
     })
+
     $("#mute_button").click(function () {
         const enabled = myStream.getAudioTracks()[0].enabled;
         if (enabled) {
@@ -106,26 +106,27 @@ $(function () {
             $("#stop_video").html(html)
         }
     })
-     $("#invite_button").click(function () {
-        const to = prompt("Enter the email address ")
-        let data={
-            url:window.location.href,
-            to:to
+
+    $("#invite_button").click(function () {
+        const to = prompt("Enter the email address")
+        let data = {
+            url: window.location.href,
+            to: to
         }
         $.ajax({
             url: "/send-mail",
-            type:"post",
-            data:JSON.stringify(data),
-            dataType:'json',
-            contentType:'application/json',
-            success: function(result){
-                alert("invite sent ")
+            type: "post",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (result) {
+                alert("Invite sent!")
             },
-            error: function(result){
-               console.log(result.responseJSON)
-            },
+            error: function (result) {
+                console.log(result.responseJSON)
+            }
         })
-     })
+    })
 
 })
 
